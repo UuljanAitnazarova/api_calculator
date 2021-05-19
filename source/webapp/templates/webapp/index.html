@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div id='container'>
+        <input id='input1' type="number">
+        <input id='input2' type="number">
+
+        <button type="button" class="operators" id="add" data-operator="add"><a onclick="onClick(event)" href="{% url 'add' %}">Add</a></button>
+        <button type="button" class="operators" id="subtract" data-operator="subtract"><a onclick="onClick(event)" href="{% url 'subtract' %}">Subtract</a></button>
+        <button type="button" class="operators" id= "divide" data-operator="divide"><a onclick="onClick(event)" href="{% url 'divide' %}">Divide</a></button>
+        <button type="button" class="operators" id="multiply" data-operator="multiply"><a onclick="onClick(event)" href="{% url 'multiply' %}">Multiply</a></button>
+
+
+        <div>
+            <span id='result'></span>
+        </div>
+    </div>
+
+
+    <script>
+        let input1 = document.getElementById('input1')
+        console.log(input1)
+        let input2 = document.getElementById('input2')
+        let container = document.getElementById('container')
+        let result = document.getElementById('result')
+
+
+
+
+        async function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                let cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        async function makeRequest(url, settings) {
+            let response = await fetch(url, settings);
+
+            if (response.ok) {  // нормальный ответ
+                return await response.json();
+            } else {            // ошибка
+                let error = new Error();
+                error.response = response;
+                throw error;
+            }
+        }
+
+
+        async function onClick(event) {
+            event.preventDefault()
+            let A = input1.value
+            let B = input2.value
+            let url = event.target.getAttribute('href')
+            let body = JSON.stringify({"A":A, "B":B})
+            let csrftoken = await getCookie('csrftoken');
+            console.log(csrftoken)
+            const settings = {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: body
+            };
+
+            try {
+                const data = await makeRequest(url, settings);
+                result.innerHTML = `Result : ${data.answer}`;
+                result.style.textDecoration = 'underline';
+                result.style.textDecorationColor = "green";
+            } catch (e) {
+                console.log(e)
+                let w = await e.response.json()
+                result.innerHTML = w['error'];
+                result.style.textDecoration = 'underline';
+                result.style.textDecorationColor = "red";
+            }
+        }
+
+    </script>
+</body>
+</html>
